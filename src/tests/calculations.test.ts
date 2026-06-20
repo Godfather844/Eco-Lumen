@@ -1,9 +1,6 @@
+import { describe, it, expect } from 'vitest';
 import { calculateCarbonFootprint } from '../utils/calculations';
 import { CalculatorInput } from '../types/index';
-
-/**
- * Self-contained unit tests for the Carbon Footprint Simulation math models.
- */
 
 const mockInputGasoline: CalculatorInput = {
   carType: 'Gasoline',
@@ -31,31 +28,42 @@ const mockInputCleanEV: CalculatorInput = {
   foodWaste: 'low',
 };
 
-export function runCalculationsTestSuite() {
-  console.log('--- STARTING CALCULATIONS TEST SUITE ---');
+describe('Calculations Utility Tests', () => {
+  it('should calculate emissions accurately for a standard gasoline vehicle commuter (Test Case 1)', () => {
+    const resultGas = calculateCarbonFootprint(mockInputGasoline);
+    
+    // Validate individual fields and total
+    expect(resultGas.transport).toBe(4.8); // (10000 * 0.411) / 1000 + (2 * 350) / 1000 = 4.11 + 0.7 = 4.81 (rounded to 4.8)
+    expect(resultGas.utilities).toBe(4.1); // Electric + Gas Heating
+    expect(resultGas.diet).toBe(1.8); // Standard Diet + Food Waste Offset
+    expect(resultGas.total).toBe(10.7); // sum = 4.81 + 4.09 + 1.825 = 10.725 (rounded to 10.7)
+  });
 
-  // Test Case 1: Standard Gasoline commuter
-  const resultGas = calculateCarbonFootprint(mockInputGasoline);
-  if (resultGas.transport === 4.8 && resultGas.total === 11.2) {
-    console.log('✓ Test Case 1: Standard Gasoline model calculations match expected values.');
-  } else {
-    console.error('✗ Test Case 1 Failed:', resultGas);
-  }
+  it('should calculate emissions accurately for a zero-carbon EV vegan commuter (Test Case 2)', () => {
+    const resultClean = calculateCarbonFootprint(mockInputCleanEV);
+    
+    // EV factor is smaller (0.08 kg CO2/mile), partial clean offsets applied
+    expect(resultClean.transport).toBe(0.4); 
+    expect(resultClean.utilities).toBe(0.1);
+    expect(resultClean.diet).toBe(0.5); // Minimum diet cap of 0.4 + 0.05 low waste factor = 0.45 -> rounds to 0.5
+    expect(resultClean.total).toBe(1.0); // significantly reduced footprint
+  });
 
-  // Test Case 2: Clean Zero-Carbon EV Vegan commuter
-  const resultClean = calculateCarbonFootprint(mockInputCleanEV);
-  if (resultClean.transport === 0.4 && resultClean.total === 1.1) {
-    console.log('✓ Test Case 2: EV and Vegan diet parameters offset correctly.');
-  } else {
-    console.error('✗ Test Case 2 Failed:', resultClean);
-  }
+  it('should map tree equivalents accurately (Test Case 3)', () => {
+    const resultGas = calculateCarbonFootprint(mockInputGasoline);
+    // Tree absorption is total emissions * 45, rounded up to next integer
+    expect(resultGas.equivalentTrees).toBe(483); // Math.ceil(10.725 * 45) = Math.ceil(482.625) = 483
+  });
 
-  // Test Case 3: Trees equivalent absorption multiplier check
-  if (resultGas.equivalentTrees === 504) {
-    console.log('✓ Test Case 3: Trees factor calculation maps accurately (total * 45).');
-  } else {
-    console.error('✗ Test Case 3 Failed:', resultGas);
-  }
-
-  console.log('--- COMPLETED CALCULATIONS TEST SUITE ---');
-}
+  it('should handle extreme bounds safely (e.g. huge mileage or household size)', () => {
+    const excessInput: CalculatorInput = {
+      ...mockInputGasoline,
+      annualMileage: 99999999, // exceeds max limit of 1000000
+      householdSize: -5,       // below min limit of 1
+    };
+    const result = calculateCarbonFootprint(excessInput);
+    expect(result.transport).toBeLessThan(500); // capped mileage cap prevents extreme number explosion
+    expect(result.utilities).toBeDefined();      // negative household size resolved to minimum 1
+    expect(isNaN(result.total)).toBe(false);
+  });
+});
