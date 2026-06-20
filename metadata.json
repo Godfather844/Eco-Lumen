@@ -1,6 +1,6 @@
 {
   "name": "Eco-Lumen",
-  "description": "An interactive personal and corporate carbon footprint analytics engine, providing high-precision emissions simulation, dynamic habit tracking, actionable reduction guidelines, and visual impact reporting.",
+  "description": "An interactive carbon footprint and environmental audit ledger, fully compliant with WCAG 2.1 AA, featuring a centralized Scope 1, 2, & 3 Greenhouse Gas calculations engine, performance-optimized visual charts, and daily checklists.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

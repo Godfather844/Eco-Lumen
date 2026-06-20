@@ -1,6 +1,6 @@
 import React from 'react';
 import { Leaf, Award, Compass, Calculator, Users, PlusCircle, LayoutDashboard } from 'lucide-react';
-import { ScreenType } from '../types';
+import { ScreenType } from '../types/index';
 
 interface NavbarProps {
   currentScreen: ScreenType;
